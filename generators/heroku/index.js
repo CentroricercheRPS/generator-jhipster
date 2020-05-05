@@ -499,7 +499,7 @@ module.exports = class extends BaseGenerator {
                     });
                 }
 
-                let dbAddOn = '';
+                let dbAddOn;
                 if (this.prodDatabaseType === 'postgresql') {
                     dbAddOn = 'heroku-postgresql --as DATABASE';
                 } else if (this.prodDatabaseType === 'mysql') {
@@ -510,15 +510,38 @@ module.exports = class extends BaseGenerator {
                     dbAddOn = 'mongolab:sandbox --as MONGODB';
                 } else if (this.prodDatabaseType === 'neo4j') {
                     dbAddOn = 'graphenedb:dev-free --as GRAPHENEDB';
+                }
+
+                if (dbAddOn) {
+                    this.log(chalk.bold(`\nProvisioning database addon ${dbAddOn}`));
+                    exec(`heroku addons:create ${dbAddOn} --app ${this.herokuAppName}`, (err, stdout, stderr) => {
+                        addonCreateCallback('Database', err, stdout, stderr);
+                    });
                 } else {
-                    done();
-                    return;
+                    this.log(chalk.bold(`\nNo suitable database addon for database ${this.prodDatabaseType} available.`));
                 }
 
                 ChildProcess.exec(`heroku addons:create ${dbAddOn} --app ${this.herokuAppName}`, (err, stdout, stderr) => {
                     addonCreateCallback('Database', err, stdout, stderr);
-                    done();
                 });
+                
+                let cacheAddOn;
+                if (this.cacheProvider === 'memcached') {
+                    cacheAddOn = 'memcachier:dev --as MEMCACHIER';
+                } else if (this.cacheProvider === 'redis') {
+                    cacheAddOn = 'heroku-redis:hobby-dev --as REDIS';
+                }
+
+                if (cacheAddOn) {
+                    this.log(chalk.bold(`\nProvisioning cache addon ${cacheAddOn}`));
+                    exec(`heroku addons:create ${cacheAddOn} --app ${this.herokuAppName}`, (err, stdout, stderr) => {
+                        addonCreateCallback('Cache', err, stdout, stderr);
+                    });
+                } else {
+                    this.log(chalk.bold(`\nNo suitable cache addon for cacheprovider ${this.cacheProvider} available.`));
+                }
+
+                done();
             },
 
             configureJHipsterRegistry() {
