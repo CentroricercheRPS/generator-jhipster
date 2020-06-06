@@ -479,7 +479,7 @@ module.exports = class extends BaseGenerator {
                 this.log(chalk.bold('\nProvisioning addons'));
                 if (this.searchEngine === 'elasticsearch') {
                     ChildProcess.exec(
-                        `heroku addons:create bonsai --as BONSAI --app ${this.herokuAppName}`,
+                        `heroku addons:create bonsai:sandbox --as BONSAI --app ${this.herokuAppName}`,
                         addonCreateCallback.bind(this, 'Elasticsearch')
                     );
                 }
